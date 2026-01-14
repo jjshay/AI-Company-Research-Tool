@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Company Comparison Tool - Research & Analysis</title>
+    <style>
+        :root {
+            --bg-primary: #0d1a2d;
+            --bg-secondary: #1a2b4a;
+            --bg-card: #152238;
+            --accent-gold: #d4a84b;
+            --accent-cyan: #00bcd4;
+            --text-primary: #ffffff;
+            --text-secondary: #8899aa;
+            --border-color: #2a3f5f;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --tier1: #f1c40f;
+            --tier2: #9b59b6;
+            --tier3: #3498db;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+            padding: 20px;
+            border-bottom: 2px solid var(--accent-gold);
+            text-align: center;
+        }
+        .header h1 {
+            color: var(--accent-gold);
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+        .header p {
+            color: var(--accent-cyan);
+            font-size: 0.9em;
+        }
+        .nav-links {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .nav-link {
+            padding: 8px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.85em;
+            transition: all 0.2s;
+        }
+        .nav-link:hover {
+            border-color: var(--accent-cyan);
+            background: var(--bg-secondary);
+        }
+        .nav-link.active {
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            border-color: var(--accent-gold);
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* Sidebar - Company Selection */
+        .sidebar {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(100vh - 120px);
+        }
+        .sidebar h3 {
+            color: var(--accent-gold);
+            margin-bottom: 15px;
+            font-size: 1em;
+        }
+        .search-box {
+            margin-bottom: 15px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+        .filter-select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+        .company-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .company-item {
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg-card);
+        }
+        .company-item:hover {
+            border-color: var(--accent-cyan);
+        }
+        .company-item.selected {
+            border-color: var(--accent-gold);
+            background: rgba(212, 168, 75, 0.1);
+        }
+        .company-item .name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .company-item .meta {
+            font-size: 0.75em;
+            color: var(--text-secondary);
+            margin-top: 3px;
+        }
+        .selected-count {
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        .clear-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--danger);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+        .clear-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Main Content */
+        .content {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* Selected Companies Strip */
+        .selected-strip {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .selected-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: var(--bg-card);
+            border: 2px solid var(--accent-gold);
+            border-radius: 25px;
+        }
+        .selected-chip .remove {
+            cursor: pointer;
+            color: var(--danger);
+            font-weight: bold;
+        }
+
+        /* Comparison Table */
+        .comparison-section {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+        .section-title {
+            color: var(--accent-gold);
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .comparison-table th {
+            text-align: left;
+            padding: 12px;
+            background: var(--bg-secondary);
+            color: var(--accent-cyan);
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .comparison-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+        .comparison-table tr:hover td {
+            background: rgba(0, 188, 212, 0.05);
+        }
+        .metric-label {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+            width: 150px;
+        }
+        .metric-value {
+            font-weight: 500;
+        }
+        .metric-value.highlight {
+            color: var(--accent-gold);
+        }
+
+        /* Funding Bar */
+        .funding-bar {
+            height: 8px;
+            background: var(--border-color);
+            border-radius: 4px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        .funding-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        .funding-fill.tier1 { background: var(--tier1); }
+        .funding-fill.tier2 { background: var(--tier2); }
+        .funding-fill.tier3 { background: var(--tier3); }
+
+        /* Insights Cards */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+        .insight-card {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid var(--accent-cyan);
+        }
+        .insight-card.warning {
+            border-left-color: var(--warning);
+        }
+        .insight-card.success {
+            border-left-color: var(--success);
+        }
+        .insight-card.danger {
+            border-left-color: var(--danger);
+        }
+        .insight-card h4 {
+            color: var(--accent-gold);
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+        .insight-card p {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+        }
+
+        /* Score Cards */
+        .score-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .score-card {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+        .score-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--accent-gold);
+        }
+        .score-label {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        /* Radar/Spider placeholder */
+        .chart-placeholder {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            color: var(--text-secondary);
+            border: 2px dashed var(--border-color);
+        }
+
+        /* Tags */
+        .tag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.7em;
+            font-weight: 600;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .tag-unicorn { background: rgba(155, 89, 182, 0.2); color: #9b59b6; }
+        .tag-ma { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+        .tag-late { background: rgba(243, 156, 18, 0.2); color: #f39c12; }
+        .tag-category { background: rgba(0, 188, 212, 0.2); color: #00bcd4; }
+
+        /* Export Button */
+        .export-btn {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, var(--accent-gold), #f39c12);
+            border: none;
+            border-radius: 8px;
+            color: var(--bg-primary);
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: transform 0.2s;
+        }
+        .export-btn:hover {
+            transform: scale(1.02);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        .empty-state h3 {
+            color: var(--accent-gold);
+            margin-bottom: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                max-height: none;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            body { background: white; color: black; }
+            .sidebar { display: none; }
+            .header { background: none; border: none; }
+            .comparison-section { border: 1px solid #ccc; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>AI Company Comparison Tool</h1>
+        <p>Research & Analysis Platform for M&A Intelligence</p>
+        <div class="nav-links">
+            <a href="GPT_LLM_Apps_Group5_Enhanced.html" class="nav-link">Directory</a>
+            <a href="compare.html" class="nav-link active">Compare</a>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <h3>Select Companies (up to 5)</h3>
+            <div class="selected-count" id="selectedCount">0 / 5 Selected</div>
+
+            <div class="search-box">
+                <input type="text" class="search-input" id="companySearch" placeholder="Search companies...">
+            </div>
+
+            <select class="filter-select" id="categoryFilter">
+                <option value="">All Categories</option>
+                <option value="foundation-models">Foundation Models</option>
+                <option value="developer-tools">Developer Tools</option>
+                <option value="enterprise-ai">Enterprise AI</option>
+                <option value="gtm-ai">GTM & Marketing AI</option>
+                <option value="fintech-legal">Fintech & Legal</option>
+                <option value="healthtech">Healthcare AI</option>
+                <option value="industrial-ai">Industrial AI</option>
+                <option value="consumer-ai">Consumer AI</option>
+            </select>
+
+            <select class="filter-select" id="locationFilter">
+                <option value="">All Locations</option>
+                <option value="sf">SF Bay Area</option>
+                <option value="boston">Boston</option>
+                <option value="nyc">NYC</option>
+                <option value="international">International</option>
+            </select>
+
+            <div class="company-list" id="companyList">
+                <!-- Populated by JS -->
+            </div>
+
+            <button class="clear-btn" onclick="clearSelection()">Clear Selection</button>
+        </aside>
+
+        <main class="content">
+            <div id="comparisonContent">
+                <div class="empty-state">
+                    <h3>Select Companies to Compare</h3>
+                    <p>Choose up to 5 companies from the sidebar to see detailed comparison, insights, and M&A analysis.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+// ==================== COMPANY DATA ====================
+const companies = [
+    {id:1,name:"OpenAI",product:"ChatGPT / GPT-4",category:"foundation-models",founded:2015,ceo:"Sam Altman",funding:"$11B+",fundingValue:11000000000,rating:5,website:"openai.com",hq:"San Francisco, CA",employees:"2,000-3,000",secretSauce:"Category creator + consumer habit + enterprise API dominance",description:"The company that started the generative AI revolution with ChatGPT.",maInsight:"Unlikely M&A target due to size and Microsoft partnership. Potential acquirer of smaller AI companies.",successFactors:["First-mover advantage in consumer AI","Enterprise API revenue >$2B ARR","Microsoft $13B partnership"]},
+    {id:2,name:"Anthropic",product:"Claude",category:"foundation-models",founded:2021,ceo:"Dario Amodei",funding:"$7.3B+",fundingValue:7300000000,rating:5,website:"anthropic.com",hq:"San Francisco, CA",employees:"800-1,200",secretSauce:"Constitutional AI + safety-first positioning + enterprise trust",description:"Founded by ex-OpenAI researchers, building Claude as the safety-focused alternative.",maInsight:"Amazon $4B investment makes acquisition complex. Could be acquirer of AI safety startups.",successFactors:["Safety differentiation","Amazon/Google investments","Claude competitive with GPT-4"]},
+    {id:3,name:"Mistral AI",product:"Mistral Models",category:"foundation-models",founded:2023,ceo:"Arthur Mensch",funding:"$1B+",fundingValue:1000000000,rating:4,website:"mistral.ai",hq:"Paris, France",employees:"50-100",secretSauce:"European AI champion + efficient open models",description:"Leading European AI company with open-weight models.",maInsight:"European sovereign AI play. Attractive to cloud providers seeking non-US AI.",successFactors:["EU regulatory advantage","Open-weight strategy","DeepMind alumni team"]},
+    {id:4,name:"Cohere",product:"Command, Embed",category:"foundation-models",founded:2019,ceo:"Aidan Gomez",funding:"$970M+",fundingValue:970000000,rating:4,website:"cohere.com",hq:"Toronto, Canada",employees:"300-500",secretSauce:"Enterprise RAG focus + multilingual + on-prem deployment",description:"Enterprise-focused LLM with strong RAG capabilities.",maInsight:"Prime acquisition target for Oracle, SAP, Salesforce.",successFactors:["Enterprise flexibility","Transformer paper co-author","Multilingual capabilities"]},
+    {id:5,name:"Databricks",product:"DBRX, Mosaic",category:"foundation-models",founded:2013,ceo:"Ali Ghodsi",funding:"$4.1B",fundingValue:4100000000,rating:4,website:"databricks.com",hq:"San Francisco, CA",employees:"6,000-7,000",secretSauce:"Data lakehouse + enterprise data + custom model training",description:"Data and AI platform with ML capabilities via Mosaic acquisition.",maInsight:"Too large for most acquirers. IPO candidate.",successFactors:["$1.6B ARR","Mosaic ML capabilities","Enterprise data moat"]},
+    {id:16,name:"LangChain",product:"LangChain Framework",category:"developer-tools",founded:2022,ceo:"Harrison Chase",funding:"$35M",fundingValue:35000000,rating:5,website:"langchain.com",hq:"San Francisco, CA",employees:"50-80",secretSauce:"LLM app framework standard + LangGraph agents",description:"De facto standard framework for building LLM applications.",maInsight:"Strategic developer tool. Attractive to cloud providers.",successFactors:["Framework standard adoption","LangSmith observability","Agent orchestration"]},
+    {id:19,name:"Pinecone",product:"Vector Database",category:"developer-tools",founded:2019,ceo:"Edo Liberty",funding:"$138M",fundingValue:138000000,rating:4,website:"pinecone.io",hq:"San Francisco, CA",employees:"150-200",secretSauce:"Vector database leader + serverless scale",description:"Leading purpose-built vector database for AI applications.",maInsight:"Core AI infrastructure. Database or cloud companies potential acquirers.",successFactors:["Vector DB category leader","Serverless pricing","RAG ecosystem central"]},
+    {id:37,name:"Cursor",product:"Cursor IDE",category:"developer-tools",founded:2022,ceo:"Michael Truell",funding:"$60M",fundingValue:60000000,rating:5,website:"cursor.sh",hq:"San Francisco, CA",employees:"30-50",secretSauce:"AI-first IDE + codebase awareness",description:"AI-first code editor built for AI-assisted development.",maInsight:"Hot acquisition target for Microsoft, JetBrains.",successFactors:["Viral developer adoption","AI-native architecture","Multi-model flexibility"]},
+    {id:43,name:"Cognition",product:"Devin",category:"developer-tools",founded:2023,ceo:"Scott Wu",funding:"$175M",fundingValue:175000000,rating:5,website:"cognition-labs.com",hq:"San Francisco, CA",employees:"20-30",secretSauce:"Fully autonomous AI software engineer",description:"Created Devin, the first autonomous AI software engineer.",maInsight:"Highly valuable autonomous coding tech. Strategic target for major tech.",successFactors:["First autonomous AI engineer","Viral demo","Agent leadership"]},
+    {id:81,name:"Glean",product:"Enterprise Search",category:"enterprise-ai",founded:2019,ceo:"Arvind Jain",funding:"$360M",fundingValue:360000000,rating:5,website:"glean.com",hq:"Palo Alto, CA",employees:"400-500",secretSauce:"Enterprise AI search + knowledge discovery",description:"AI-powered enterprise search connecting all company knowledge.",maInsight:"Hot enterprise search. Google or Microsoft could acquire.",successFactors:["Fastest-growing enterprise search","Strong NPS","Ex-Google leadership"]},
+    {id:119,name:"Harvey",product:"Legal AI",category:"fintech-legal",founded:2022,ceo:"Winston Weinberg",funding:"$106M",fundingValue:106000000,rating:5,website:"harvey.ai",hq:"San Francisco, CA",employees:"80-120",secretSauce:"Legal AI platform + elite law firm adoption",description:"AI assistant for lawyers used by top-tier law firms.",maInsight:"Hottest legal AI startup. Thomson Reuters, LexisNexis potential acquirers.",successFactors:["Elite law firm adoption","OpenAI partnership","Rapid growth"]},
+    {id:250,name:"Tempus",product:"Tempus AI",category:"healthtech",founded:2015,ceo:"Eric Lefkofsky",funding:"$1.3B",fundingValue:1300000000,rating:5,website:"tempus.com",hq:"Chicago, IL",employees:"2,500-3,000",secretSauce:"Precision medicine AI + genomic data",description:"AI platform for precision medicine using clinical and molecular data.",maInsight:"IPO candidate. Pharma or health system acquisition possible.",successFactors:["Largest clinical/molecular dataset","Pharma partnerships","$700M+ revenue"]},
+    {id:252,name:"PathAI",product:"PathAI",category:"healthtech",founded:2016,ceo:"Andy Beck",funding:"$255M",fundingValue:255000000,rating:4,website:"pathai.com",hq:"Boston, MA",employees:"300-400",secretSauce:"Pathology AI + biopharma partnerships",description:"AI-powered pathology platform for research and diagnostics.",maInsight:"Pharma or diagnostics company acquisition target.",successFactors:["Pathology AI leadership","Biopharma partnerships","FDA pathway progress"]},
+    {id:350,name:"Scale AI",product:"Scale",category:"industrial-ai",founded:2016,ceo:"Alexandr Wang",funding:"$602M",fundingValue:602000000,rating:5,website:"scale.com",hq:"San Francisco, CA",employees:"600-800",secretSauce:"Data labeling platform + defense contracts",description:"Data platform for AI including labeling, testing, and government solutions.",maInsight:"Government contracts and data moat make strategic target.",successFactors:["$1B+ government contracts","Data engine leadership","Enterprise AI expansion"]},
+    {id:450,name:"Figure",product:"Figure 01",category:"industrial-ai",founded:2022,ceo:"Brett Adcock",funding:"$675M",fundingValue:675000000,rating:5,website:"figure.ai",hq:"Sunnyvale, CA",employees:"150-200",secretSauce:"General-purpose humanoid robot + BMW partnership",description:"Building general-purpose humanoid robots for labor shortage.",maInsight:"Strategic asset for manufacturing, logistics, or tech giants.",successFactors:["BMW partnership","OpenAI collaboration","Humanoid robot leadership"]},
+    {id:502,name:"Perplexity",product:"Perplexity",category:"consumer-ai",founded:2022,ceo:"Aravind Srinivas",funding:"$165M",fundingValue:165000000,rating:5,website:"perplexity.ai",hq:"San Francisco, CA",employees:"50-80",secretSauce:"AI answer engine + real-time search + citations",description:"AI-powered answer engine with cited responses.",maInsight:"Search disruption play. Strategic for browser or content companies.",successFactors:["Answer engine innovation","Pro subscriber growth","Real-time citations"]},
+    {id:701,name:"Runway",product:"Runway ML",category:"consumer-ai",founded:2018,ceo:"Cristobal Valenzuela",funding:"$237M",fundingValue:237000000,rating:5,website:"runwayml.com",hq:"New York, NY",employees:"100-150",secretSauce:"AI video generation + Gen-2 model",description:"AI creative tools for video generation and editing.",maInsight:"Adobe, entertainment, or creative tool company target.",successFactors:["Gen-2 video leadership","Hollywood adoption","Creative tool ecosystem"]},
+    {id:703,name:"ElevenLabs",product:"ElevenLabs",category:"consumer-ai",founded:2022,ceo:"Mati Staniszewski",funding:"$101M",fundingValue:101000000,rating:5,website:"elevenlabs.io",hq:"New York, NY",employees:"50-80",secretSauce:"Voice AI + realistic speech synthesis",description:"AI voice platform with industry-leading voice synthesis.",maInsight:"Audio/media company acquisition target. Spotify, Adobe potential.",successFactors:["Voice synthesis leadership","Consumer and enterprise revenue","Dubbing and localization"]},
+    {id:705,name:"Midjourney",product:"Midjourney",category:"consumer-ai",founded:2022,ceo:"David Holz",funding:"$0 (Self-funded)",fundingValue:10000000,rating:5,website:"midjourney.com",hq:"San Francisco, CA",employees:"50-60",secretSauce:"Image generation + artistic style + Discord community",description:"Self-funded AI image generation with distinctive artistic style.",maInsight:"Uniquely profitable and self-funded. Would require significant premium.",successFactors:["Profitable with no VC","Distinctive artistic style","Discord community model"]},
+    {id:706,name:"Suno",product:"Suno",category:"consumer-ai",founded:2023,ceo:"Mikey Shulman",funding:"$125M",fundingValue:125000000,rating:4,website:"suno.ai",hq:"Cambridge, MA",employees:"30-40",secretSauce:"AI music generation + text-to-song",description:"AI platform generating complete songs with vocals from text.",maInsight:"Music industry disruption. Label or streaming platform target.",successFactors:["Music generation leadership","Viral consumer adoption","Text-to-song innovation"]},
+    {id:126,name:"Ramp",product:"Corporate Spend",category:"fintech-legal",founded:2019,ceo:"Eric Glyman",funding:"$970M",fundingValue:970000000,rating:5,website:"ramp.com",hq:"New York, NY",employees:"700-900",secretSauce:"Spend management + AI savings + fastest growth",description:"Corporate card and spend management with AI that saves money.",maInsight:"Fastest-growing fintech. Could IPO or be acquired by major bank.",successFactors:["30x growth in 3 years","AI savings differentiation","Capital efficient"]},
+    {id:151,name:"Lavender",product:"Lavender",category:"gtm-ai",founded:2020,ceo:"Will Allred",funding:"$13M",fundingValue:13000000,rating:4,website:"lavender.ai",hq:"Boston, MA",employees:"30-50",secretSauce:"Email AI coaching + reply rate optimization",description:"AI email assistant coaching sales reps for better emails.",maInsight:"Email optimization for CRM or sales platform acquisition.",successFactors:["Email coaching unique","Reply rate data","Sales integrations"]},
+    {id:101,name:"Eightfold AI",product:"Talent Intelligence",category:"enterprise-ai",founded:2016,ceo:"Ashutosh Garg",funding:"$396M",fundingValue:396000000,rating:4,website:"eightfold.ai",hq:"Santa Clara, CA",employees:"700-900",secretSauce:"AI talent intelligence + skills matching",description:"AI-powered talent intelligence platform for recruiting and retention.",maInsight:"Category leader. Workday, Oracle, or SAP potential acquirer.",successFactors:["Skills-first approach","Enterprise customers","Diversity hiring focus"]},
+    {id:111,name:"Ada",product:"AI Customer Service",category:"enterprise-ai",founded:2016,ceo:"Mike Murchison",funding:"$190M",fundingValue:190000000,rating:4,website:"ada.cx",hq:"Toronto, Canada",employees:"400-500",secretSauce:"AI-first customer service + automated resolution",description:"AI-first customer service automation platform.",maInsight:"Strong Canadian AI story. Zendesk, Salesforce, or Microsoft potential.",successFactors:["Meta and Zoom customers","High resolution rates","AI-native architecture"]}
+];
+
+// State
+let selectedCompanies = [];
+const MAX_SELECTION = 5;
+
+// Category names
+const categoryNames = {
+    'foundation-models': 'Foundation Models',
+    'developer-tools': 'Developer Tools',
+    'enterprise-ai': 'Enterprise AI',
+    'gtm-ai': 'GTM & Marketing AI',
+    'fintech-legal': 'Fintech & Legal',
+    'healthtech': 'Healthcare AI',
+    'industrial-ai': 'Industrial AI',
+    'consumer-ai': 'Consumer AI'
+};
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    renderCompanyList();
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    document.getElementById('companySearch').addEventListener('input', renderCompanyList);
+    document.getElementById('categoryFilter').addEventListener('change', renderCompanyList);
+    document.getElementById('locationFilter').addEventListener('change', renderCompanyList);
+}
+
+function renderCompanyList() {
+    const search = document.getElementById('companySearch').value.toLowerCase();
+    const category = document.getElementById('categoryFilter').value;
+    const location = document.getElementById('locationFilter').value;
+
+    let filtered = companies.filter(c => {
+        if (category && c.category !== category) return false;
+        if (location) {
+            const hq = (c.hq || '').toLowerCase();
+            if (location === 'sf' && !hq.includes('san francisco') && !hq.includes('palo alto') &&
+                !hq.includes('mountain view') && !hq.includes('sunnyvale')) return false;
+            if (location === 'boston' && !hq.includes('boston') && !hq.includes('cambridge') &&
+                !hq.includes(', ma')) return false;
+            if (location === 'nyc' && !hq.includes('new york') && !hq.includes(', ny')) return false;
+            if (location === 'international') {
+                if (hq.includes('ca') || hq.includes('ny') || hq.includes('ma') ||
+                    hq.includes('san francisco') || hq.includes('new york')) return false;
+            }
+        }
+        if (search) {
+            const searchText = `${c.name} ${c.product} ${c.category}`.toLowerCase();
+            if (!searchText.includes(search)) return false;
+        }
+        return true;
+    });
+
+    const list = document.getElementById('companyList');
+    list.innerHTML = filtered.map(c => `
+        <div class="company-item ${selectedCompanies.find(s => s.id === c.id) ? 'selected' : ''}"
+             onclick="toggleCompany(${c.id})">
+            <div class="name">${c.name}</div>
+            <div class="meta">${c.product} | ${c.funding}</div>
+        </div>
+    `).join('');
+}
+
+function toggleCompany(id) {
+    const company = companies.find(c => c.id === id);
+    const existingIndex = selectedCompanies.findIndex(c => c.id === id);
+
+    if (existingIndex >= 0) {
+        selectedCompanies.splice(existingIndex, 1);
+    } else if (selectedCompanies.length < MAX_SELECTION) {
+        selectedCompanies.push(company);
+    } else {
+        alert(`Maximum ${MAX_SELECTION} companies can be compared at once.`);
+        return;
+    }
+
+    updateSelectedCount();
+    renderCompanyList();
+    renderComparison();
+}
+
+function removeCompany(id) {
+    selectedCompanies = selectedCompanies.filter(c => c.id !== id);
+    updateSelectedCount();
+    renderCompanyList();
+    renderComparison();
+}
+
+function clearSelection() {
+    selectedCompanies = [];
+    updateSelectedCount();
+    renderCompanyList();
+    renderComparison();
+}
+
+function updateSelectedCount() {
+    document.getElementById('selectedCount').textContent = `${selectedCompanies.length} / ${MAX_SELECTION} Selected`;
+}
+
+function renderComparison() {
+    const content = document.getElementById('comparisonContent');
+
+    if (selectedCompanies.length === 0) {
+        content.innerHTML = `
+            <div class="empty-state">
+                <h3>Select Companies to Compare</h3>
+                <p>Choose up to 5 companies from the sidebar to see detailed comparison, insights, and M&A analysis.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Calculate max funding for bar scaling
+    const maxFunding = Math.max(...selectedCompanies.map(c => c.fundingValue));
+
+    content.innerHTML = `
+        <!-- Selected Companies Strip -->
+        <div class="selected-strip">
+            ${selectedCompanies.map(c => `
+                <div class="selected-chip">
+                    <span>${c.name}</span>
+                    <span class="remove" onclick="removeCompany(${c.id})">×</span>
+                </div>
+            `).join('')}
+        </div>
+
+        <!-- Export Buttons -->
+        <div style="margin-bottom: 20px;">
+            <button class="export-btn" onclick="exportToPDF()">📄 Export PDF</button>
+            <button class="export-btn" onclick="exportToCSV()">📊 Export CSV</button>
+            <button class="export-btn" onclick="window.print()">🖨️ Print</button>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="score-grid">
+            <div class="score-card">
+                <div class="score-value">${selectedCompanies.length}</div>
+                <div class="score-label">Companies</div>
+            </div>
+            <div class="score-card">
+                <div class="score-value">$${(selectedCompanies.reduce((sum, c) => sum + c.fundingValue, 0) / 1000000000).toFixed(1)}B</div>
+                <div class="score-label">Total Funding</div>
+            </div>
+            <div class="score-card">
+                <div class="score-value">${Math.round(selectedCompanies.reduce((sum, c) => sum + parseInt(c.employees?.replace(/[^0-9]/g, '') || 0), 0) / selectedCompanies.length).toLocaleString()}</div>
+                <div class="score-label">Avg Employees</div>
+            </div>
+            <div class="score-card">
+                <div class="score-value">${Math.round(selectedCompanies.reduce((sum, c) => sum + c.founded, 0) / selectedCompanies.length)}</div>
+                <div class="score-label">Avg Founded</div>
+            </div>
+        </div>
+
+        <!-- Key Metrics Comparison -->
+        <div class="comparison-section">
+            <h3 class="section-title">📊 Key Metrics Comparison</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        ${selectedCompanies.map(c => `<th>${c.name}</th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="metric-label">Funding</td>
+                        ${selectedCompanies.map(c => `
+                            <td>
+                                <div class="metric-value highlight">${c.funding}</div>
+                                <div class="funding-bar">
+                                    <div class="funding-fill tier1" style="width: ${(c.fundingValue / maxFunding * 100)}%"></div>
+                                </div>
+                            </td>
+                        `).join('')}
+                    </tr>
+                    <tr>
+                        <td class="metric-label">Founded</td>
+                        ${selectedCompanies.map(c => `<td class="metric-value">${c.founded}</td>`).join('')}
+                    </tr>
+                    <tr>
+                        <td class="metric-label">Employees</td>
+                        ${selectedCompanies.map(c => `<td class="metric-value">${c.employees}</td>`).join('')}
+                    </tr>
+                    <tr>
+                        <td class="metric-label">CEO</td>
+                        ${selectedCompanies.map(c => `<td class="metric-value">${c.ceo}</td>`).join('')}
+                    </tr>
+                    <tr>
+                        <td class="metric-label">HQ</td>
+                        ${selectedCompanies.map(c => `<td class="metric-value">${c.hq}</td>`).join('')}
+                    </tr>
+                    <tr>
+                        <td class="metric-label">Rating</td>
+                        ${selectedCompanies.map(c => `<td class="metric-value">${'★'.repeat(c.rating)}${'☆'.repeat(5-c.rating)}</td>`).join('')}
+                    </tr>
+                    <tr>
+                        <td class="metric-label">Category</td>
+                        ${selectedCompanies.map(c => `<td><span class="tag tag-category">${categoryNames[c.category] || c.category}</span></td>`).join('')}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Products & Secret Sauce -->
+        <div class="comparison-section">
+            <h3 class="section-title">🔮 Products & Competitive Advantage</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Aspect</th>
+                        ${selectedCompanies.map(c => `<th>${c.name}</th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="metric-label">Product</td>
+                        ${selectedCompanies.map(c => `<td class="metric-value">${c.product}</td>`).join('')}
+                    </tr>
+                    <tr>
+                        <td class="metric-label">Secret Sauce</td>
+                        ${selectedCompanies.map(c => `<td class="metric-value" style="font-size: 0.85em;">${c.secretSauce}</td>`).join('')}
+                    </tr>
+                    <tr>
+                        <td class="metric-label">Description</td>
+                        ${selectedCompanies.map(c => `<td class="metric-value" style="font-size: 0.85em;">${c.description}</td>`).join('')}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- M&A Intelligence -->
+        <div class="comparison-section">
+            <h3 class="section-title">🎯 M&A Intelligence</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Analysis</th>
+                        ${selectedCompanies.map(c => `<th>${c.name}</th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="metric-label">M&A Insight</td>
+                        ${selectedCompanies.map(c => `<td class="metric-value" style="font-size: 0.85em;">${c.maInsight || 'N/A'}</td>`).join('')}
+                    </tr>
+                    <tr>
+                        <td class="metric-label">Success Factors</td>
+                        ${selectedCompanies.map(c => `<td class="metric-value" style="font-size: 0.85em;">${c.successFactors ? c.successFactors.map(f => `• ${f}`).join('<br>') : 'N/A'}</td>`).join('')}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- AI-Generated Insights -->
+        <div class="comparison-section">
+            <h3 class="section-title">💡 AI-Generated Insights</h3>
+            <div class="insights-grid">
+                ${generateInsights()}
+            </div>
+        </div>
+
+        <!-- Recommendation -->
+        <div class="comparison-section">
+            <h3 class="section-title">🏆 Recommendation Summary</h3>
+            <div style="padding: 20px; background: var(--bg-secondary); border-radius: 10px;">
+                ${generateRecommendation()}
+            </div>
+        </div>
+    `;
+}
+
+function generateInsights() {
+    if (selectedCompanies.length < 2) {
+        return '<p style="color: var(--text-secondary);">Add at least 2 companies for comparative insights.</p>';
+    }
+
+    let insights = [];
+
+    // Funding analysis
+    const sortedByFunding = [...selectedCompanies].sort((a, b) => b.fundingValue - a.fundingValue);
+    insights.push({
+        type: 'success',
+        title: 'Funding Leader',
+        text: `${sortedByFunding[0].name} leads with ${sortedByFunding[0].funding} in funding, ${((sortedByFunding[0].fundingValue / sortedByFunding[sortedByFunding.length-1].fundingValue)).toFixed(1)}x more than ${sortedByFunding[sortedByFunding.length-1].name}.`
+    });
+
+    // Age analysis
+    const sortedByAge = [...selectedCompanies].sort((a, b) => a.founded - b.founded);
+    const oldest = sortedByAge[0];
+    const youngest = sortedByAge[sortedByAge.length - 1];
+    insights.push({
+        type: 'warning',
+        title: 'Company Maturity',
+        text: `${oldest.name} (${oldest.founded}) is the most established. ${youngest.name} (${youngest.founded}) is the youngest, potentially offering higher growth but higher risk.`
+    });
+
+    // Category diversity
+    const categories = [...new Set(selectedCompanies.map(c => c.category))];
+    if (categories.length === 1) {
+        insights.push({
+            type: 'danger',
+            title: 'Category Concentration',
+            text: `All selected companies are in ${categoryNames[categories[0]]}. Consider diversifying across categories for a balanced portfolio.`
+        });
+    } else {
+        insights.push({
+            type: 'success',
+            title: 'Category Diversification',
+            text: `Selection spans ${categories.length} categories: ${categories.map(c => categoryNames[c]).join(', ')}. Good diversification.`
+        });
+    }
+
+    // Location analysis
+    const locations = selectedCompanies.map(c => c.hq);
+    const sfCount = locations.filter(l => l.toLowerCase().includes('san francisco') || l.toLowerCase().includes('palo alto')).length;
+    if (sfCount > selectedCompanies.length / 2) {
+        insights.push({
+            type: 'warning',
+            title: 'Geographic Concentration',
+            text: `${sfCount} of ${selectedCompanies.length} companies are in the SF Bay Area. Consider geographic diversification.`
+        });
+    }
+
+    // Rating analysis
+    const avgRating = selectedCompanies.reduce((sum, c) => sum + c.rating, 0) / selectedCompanies.length;
+    insights.push({
+        type: avgRating >= 4 ? 'success' : 'warning',
+        title: 'Quality Score',
+        text: `Average rating is ${avgRating.toFixed(1)}/5 stars. ${avgRating >= 4 ? 'High-quality selection.' : 'Consider adding higher-rated companies.'}`
+    });
+
+    return insights.map(i => `
+        <div class="insight-card ${i.type}">
+            <h4>${i.title}</h4>
+            <p>${i.text}</p>
+        </div>
+    `).join('');
+}
+
+function generateRecommendation() {
+    if (selectedCompanies.length < 2) {
+        return '<p style="color: var(--text-secondary);">Add at least 2 companies for recommendations.</p>';
+    }
+
+    const sortedByFunding = [...selectedCompanies].sort((a, b) => b.fundingValue - a.fundingValue);
+    const sortedByRating = [...selectedCompanies].sort((a, b) => b.rating - a.rating);
+    const totalFunding = selectedCompanies.reduce((sum, c) => sum + c.fundingValue, 0);
+
+    return `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <div>
+                <h4 style="color: var(--accent-gold); margin-bottom: 10px;">🏆 Best Funded</h4>
+                <p style="font-size: 1.2em; font-weight: 600;">${sortedByFunding[0].name}</p>
+                <p style="color: var(--text-secondary); font-size: 0.85em;">${sortedByFunding[0].funding}</p>
+            </div>
+            <div>
+                <h4 style="color: var(--accent-gold); margin-bottom: 10px;">⭐ Highest Rated</h4>
+                <p style="font-size: 1.2em; font-weight: 600;">${sortedByRating[0].name}</p>
+                <p style="color: var(--text-secondary); font-size: 0.85em;">${sortedByRating[0].rating}/5 stars</p>
+            </div>
+            <div>
+                <h4 style="color: var(--accent-gold); margin-bottom: 10px;">📈 Portfolio Value</h4>
+                <p style="font-size: 1.2em; font-weight: 600;">$${(totalFunding / 1000000000).toFixed(2)}B</p>
+                <p style="color: var(--text-secondary); font-size: 0.85em;">Combined funding</p>
+            </div>
+        </div>
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+            <h4 style="color: var(--accent-cyan); margin-bottom: 10px;">Strategic Assessment</h4>
+            <p style="color: var(--text-secondary); line-height: 1.7;">
+                ${selectedCompanies.length === 1 ?
+                    `${selectedCompanies[0].name} shows strong fundamentals with ${selectedCompanies[0].funding} in funding. ${selectedCompanies[0].maInsight}` :
+                    `This portfolio of ${selectedCompanies.length} companies represents $${(totalFunding / 1000000000).toFixed(1)}B in combined funding across ${[...new Set(selectedCompanies.map(c => c.category))].length} category(ies).
+                    ${sortedByFunding[0].name} leads in funding, while ${sortedByRating[0].name} has the strongest rating.
+                    For M&A purposes, ${selectedCompanies.filter(c => c.maInsight?.toLowerCase().includes('target')).map(c => c.name).join(', ') || 'several companies'} appear to be potential acquisition targets.`
+                }
+            </p>
+        </div>
+    `;
+}
+
+function exportToCSV() {
+    if (selectedCompanies.length === 0) {
+        alert('Please select companies to export.');
+        return;
+    }
+
+    const headers = ['Name', 'Product', 'Category', 'Founded', 'CEO', 'Funding', 'Employees', 'HQ', 'Rating', 'Secret Sauce', 'M&A Insight'];
+    const rows = selectedCompanies.map(c => [
+        c.name,
+        c.product,
+        categoryNames[c.category] || c.category,
+        c.founded,
+        c.ceo,
+        c.funding,
+        c.employees,
+        c.hq,
+        c.rating,
+        `"${c.secretSauce}"`,
+        `"${c.maInsight || ''}"`
+    ]);
+
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ai-company-comparison-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+}
+
+function exportToPDF() {
+    alert('PDF export: Use the Print button and select "Save as PDF" in your browser\'s print dialog for best results.');
+    window.print();
+}
+</script>
+</body>
+</html>
