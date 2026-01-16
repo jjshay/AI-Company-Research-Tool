@@ -52,6 +52,33 @@
             margin-top: 5px;
         }
 
+        .nav-links {
+            margin-top: 12px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .nav-link {
+            padding: 6px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.8em;
+            transition: all 0.2s;
+        }
+        .nav-link:hover {
+            border-color: var(--accent-cyan);
+            background: var(--bg-secondary);
+        }
+        .nav-link.active {
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            border-color: var(--accent-gold);
+        }
+
         /* ============ SEARCH & FILTERS ============ */
         .search-container {
             padding: 15px;
@@ -1392,6 +1419,11 @@
     <header class="main-header">
         <h1>800+ PRIVATE AI COMPANIES</h1>
         <p class="subtitle">Interactive M&A Intelligence Directory</p>
+        <nav class="nav-links">
+            <a href="index.html" class="nav-link active">Directory</a>
+            <a href="compare.html" class="nav-link">Compare</a>
+            <a href="market-map.html" class="nav-link">Market Map</a>
+        </nav>
     </header>
 
     <!-- Voice Input Bar -->
